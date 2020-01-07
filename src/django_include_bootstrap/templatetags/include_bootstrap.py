@@ -12,7 +12,6 @@ from ..utils import (
     jquery_slim_url,
     jquery_url,
     popper_url,
-    theme_url,
     render_link_tag,
     render_script_tag,
     render_tag,
@@ -180,29 +179,6 @@ def bootstrap_css_url():
     return css_url()
 
 
-@register.simple_tag
-def bootstrap_theme_url():
-    """
-    Return the full url to a Bootstrap theme CSS library.
-
-    Default value: ``None``
-
-    This value is configurable, see Settings section
-
-    **Tag name**::
-
-        bootstrap_theme_url
-
-    **Usage**::
-
-        {% bootstrap_theme_url %}
-
-    **Example**::
-
-        {% bootstrap_theme_url %}
-    """
-    return theme_url()
-
 
 @register.simple_tag
 def bootstrap_css():
@@ -228,8 +204,6 @@ def bootstrap_css():
     rendered_urls = []
     if bootstrap_css_url():
         rendered_urls.append(render_link_tag(bootstrap_css_url()))
-    if bootstrap_theme_url():
-        rendered_urls.append(render_link_tag(bootstrap_theme_url()))
     return mark_safe("".join([url for url in rendered_urls]))
 
 

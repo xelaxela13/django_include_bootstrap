@@ -11,29 +11,34 @@ except ImportError:
 # Default settings
 
 INCLUDE_BOOTSTRAP_DEFAULTS = {
+    "bootstrap_version": "4.1.1",
+    "jquery_version": "3.3.1",
+    "popover_version": "1.14.3",
+    "bootstrap_cdn_url": "https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}",
+    "jquery_cdn_url": "https://code.jquery.com",
+    "popover_cdn_url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd",
     "css_url": {
-        "href": "https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css",
+        "href": "{bootstrap_cdn_url}/css/bootstrap.{min}css",
         "integrity": "sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB",
         "crossorigin": "anonymous",
     },
     "javascript_url": {
-        "url": "https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js",
+        "url": "{bootstrap_cdn_url}/js/bootstrap.{min}js",
         "integrity": "sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T",
         "crossorigin": "anonymous",
     },
-    "theme_url": None,
     "jquery_url": {
-        "url": "https://code.jquery.com/jquery-3.3.1.min.js",
+        "url": "{jquery_cdn_url}/jquery-{jquery_version}.{min}js",
         "integrity": "sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT",
         "crossorigin": "anonymous",
     },
     "jquery_slim_url": {
-        "url": "https://code.jquery.com/jquery-3.3.1.slim.min.js",
+        "url": "{jquery_cdn_url}/jquery-{jquery_version}.slim.{min}js",
         "integrity": "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
         "crossorigin": "anonymous",
     },
     "popper_url": {
-        "url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+        "url": "{popover_cdn_url}/popper.min.js",
         "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
         "crossorigin": "anonymous",
     },
@@ -41,6 +46,10 @@ INCLUDE_BOOTSTRAP_DEFAULTS = {
     "include_jquery": False,
     "use_i18n": False,
 }
+
+
+def format_bootstrap_settings():
+    pass
 
 
 def get_bootstrap_setting(name, default=None):
@@ -94,11 +103,6 @@ def javascript_bundle_url():
 def css_url():
     """Return the full url to the Bootstrap CSS file."""
     return get_bootstrap_setting("css_url")
-
-
-def theme_url():
-    """Return the full url to the theme CSS file."""
-    return get_bootstrap_setting("theme_url")
 
 
 def i18n_enabled():
