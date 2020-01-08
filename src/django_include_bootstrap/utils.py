@@ -16,6 +16,11 @@ CDNS = {
     "jquery_cdn_url": "https://code.jquery.com",
     "popover_cdn_url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd",
 }
+VERSIONS = {
+    "bootstrap_version": "4.1.1",
+    "jquery_version": "3.3.1",
+    "popover_version": "1.14.3",
+}
 DEFAULTS = {
     "css_url": {
         "href": "{bootstrap_cdn_url}/css/bootstrap.{min}css",
@@ -44,9 +49,7 @@ DEFAULTS = {
     },
 }
 INCLUDE_BOOTSTRAP_SETTINGS = {
-    "bootstrap_version": "4.1.1",
-    "jquery_version": "3.3.1",
-    "popover_version": "1.14.3",
+    **VERSIONS,
     "javascript_in_head": False,
     "include_jquery": False,
     "use_i18n": False,
@@ -64,11 +67,11 @@ def main(url):
 
 
 def format_bootstrap_settings(ib_setting, ib_modify_dict):
-    # for key in chain(CDNS, VERSIONS):
-    #     try:
-    #         ib_setting[key]
-    #     except KeyError:
-    #         ib_setting[key] = INCLUDE_BOOTSTRAP_SETTINGS[key]
+    for key in chain(CDNS, VERSIONS):
+        try:
+            ib_setting[key]
+        except KeyError:
+            ib_setting[key] = INCLUDE_BOOTSTRAP_SETTINGS[key]
     format_keys = {'bootstrap_cdn_url': ib_setting['bootstrap_cdn_url'],
                    'jquery_cdn_url': ib_setting['jquery_cdn_url'],
                    'popover_cdn_url': ib_setting['popover_cdn_url'],
