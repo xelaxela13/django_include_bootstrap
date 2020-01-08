@@ -2,21 +2,21 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.forms.utils import flatatt
 from django.utils.html import format_html
+from itertools import chain
+import requests
+import subresource_integrity as integrity
 
 try:
     from django.utils.encoding import force_text
 except ImportError:
     from django.utils.encoding import force_unicode as force_text
 
-# Default settings
-
-INCLUDE_BOOTSTRAP_DEFAULTS = {
-    "bootstrap_version": "4.1.1",
-    "jquery_version": "3.3.1",
-    "popover_version": "1.14.3",
+CDNS = {
     "bootstrap_cdn_url": "https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}",
     "jquery_cdn_url": "https://code.jquery.com",
     "popover_cdn_url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd",
+}
+DEFAULTS = {
     "css_url": {
         "href": "{bootstrap_cdn_url}/css/bootstrap.{min}css",
         "integrity": "sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB",
@@ -42,28 +42,64 @@ INCLUDE_BOOTSTRAP_DEFAULTS = {
         "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
         "crossorigin": "anonymous",
     },
+}
+INCLUDE_BOOTSTRAP_SETTINGS = {
+    "bootstrap_version": "4.1.1",
+    "jquery_version": "3.3.1",
+    "popover_version": "1.14.3",
     "javascript_in_head": False,
     "include_jquery": False,
     "use_i18n": False,
+    "min": True
 }
 
 
-def format_bootstrap_settings():
+def fetch(url):
+    response = requests.get(url=url)
+    yield response
+
+
+def main(url):
     pass
+
+
+def format_bootstrap_settings(ib_setting, ib_modify_dict):
+    # for key in chain(CDNS, VERSIONS):
+    #     try:
+    #         ib_setting[key]
+    #     except KeyError:
+    #         ib_setting[key] = INCLUDE_BOOTSTRAP_SETTINGS[key]
+    format_keys = {'bootstrap_cdn_url': ib_setting['bootstrap_cdn_url'],
+                   'jquery_cdn_url': ib_setting['jquery_cdn_url'],
+                   'popover_cdn_url': ib_setting['popover_cdn_url'],
+                   'min': 'min.' if ib_setting['min'] else '',
+                   "bootstrap_version": ib_setting['bootstrap_version'],
+                   "jquery_version": ib_setting['jquery_version'],
+                   "popover_version": ib_setting['popover_version'],
+                   }
+    for key, val in ib_modify_dict.items():
+        if isinstance(val, dict) and val.get('href'):
+            val['href'] = val['href'].format(**format_keys)
+        else:
+            ib_modify_dict[key] = val.format(**format_keys)
+    return ib_modify_dict
 
 
 def get_bootstrap_setting(name, default=None):
     """Read a setting."""
     # Start with a copy of default settings
-    INCLUDE_BOOTSTRAP = INCLUDE_BOOTSTRAP_DEFAULTS.copy()
+    IB_SETTINGS = INCLUDE_BOOTSTRAP_SETTINGS.copy()
+    IB_CDNS = CDNS.copy()
+    IB_SETTINGS.update(**IB_CDNS)
 
+    IB_DEFAULTS = format_bootstrap_settings(IB_SETTINGS, DEFAULTS.copy())
+    IB_SETTINGS.update(**IB_DEFAULTS)
     # Override with user settings from settings.py
-    INCLUDE_BOOTSTRAP.update(getattr(settings, "INCLUDE_BOOTSTRAP", {}))
-
+    IB_SETTINGS.update(getattr(settings, "INCLUDE_BOOTSTRAP_SETTINGS", {}))
     # Update use_i18n
-    INCLUDE_BOOTSTRAP["use_i18n"] = i18n_enabled()
+    IB_SETTINGS["use_i18n"] = i18n_enabled()
 
-    return INCLUDE_BOOTSTRAP.get(name, default)
+    return IB_SETTINGS.get(name, default)
 
 
 def jquery_url():
@@ -147,3 +183,7 @@ def render_tag(tag, attrs=None, content=None, close=True):
     if content or close:
         builder += "</{tag}>"
     return format_html(builder, tag=tag, attrs=mark_safe(flatatt(attrs)) if attrs else "", content=text_value(content))
+
+
+if __name__ == "__main__":
+    main()
