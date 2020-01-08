@@ -2,7 +2,6 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.forms.utils import flatatt
 from django.utils.html import format_html
-from itertools import chain
 import requests
 import subresource_integrity as integrity
 
@@ -11,98 +10,105 @@ try:
 except ImportError:
     from django.utils.encoding import force_unicode as force_text
 
-CDNS = {
-    "bootstrap_cdn_url": "https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}",
-    "jquery_cdn_url": "https://code.jquery.com",
-    "popover_cdn_url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd",
-}
 VERSIONS = {
-    "bootstrap_version": "4.1.1",
+    "bootstrap_version": "4.4.1",
     "jquery_version": "3.3.1",
     "popover_version": "1.14.3",
 }
-DEFAULTS = {
-    "css_url": {
-        "href": "{bootstrap_cdn_url}/css/bootstrap.{min}css",
-        "integrity": "sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB",
-        "crossorigin": "anonymous",
-    },
-    "javascript_url": {
-        "url": "{bootstrap_cdn_url}/js/bootstrap.{min}js",
-        "integrity": "sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T",
-        "crossorigin": "anonymous",
-    },
-    "jquery_url": {
-        "url": "{jquery_cdn_url}/jquery-{jquery_version}.{min}js",
-        "integrity": "sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT",
-        "crossorigin": "anonymous",
-    },
-    "jquery_slim_url": {
-        "url": "{jquery_cdn_url}/jquery-{jquery_version}.slim.{min}js",
-        "integrity": "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
-        "crossorigin": "anonymous",
-    },
-    "popper_url": {
-        "url": "{popover_cdn_url}/popper.min.js",
-        "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
-        "crossorigin": "anonymous",
-    },
-}
+
 INCLUDE_BOOTSTRAP_SETTINGS = {
     **VERSIONS,
     "javascript_in_head": False,
     "include_jquery": False,
     "use_i18n": False,
-    "min": True
+    "min": True,
+    "css_url": {
+        "href": "https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.{min}css",
+        "integrity": "sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh",
+        "crossorigin": "anonymous",
+    },
+    "javascript_url": {
+        "url": "https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.{min}js",
+        "integrity": "sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6",
+        "crossorigin": "anonymous",
+    },
+    "jquery_url": {
+        "url": "https://code.jquery.com/jquery-{jquery_version}.{min}js",
+        "integrity": "sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT",
+        "crossorigin": "anonymous",
+    },
+    "jquery_slim_url": {
+        "url": "https://code.jquery.com//jquery-{jquery_version}.slim.{min}js",
+        "integrity": "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
+        "crossorigin": "anonymous",
+    },
+    "popper_url": {
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd/popper.min.js",
+        "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
+        "crossorigin": "anonymous",
+    },
 }
 
 
-def fetch(url):
-    response = requests.get(url=url)
-    yield response
+def main():
+    jquery_url()
 
 
-def main(url):
-    pass
+def get_integrity(data):
+    return integrity.render(data)
 
 
-def format_bootstrap_settings(ib_setting, ib_modify_dict):
-    for key in chain(CDNS, VERSIONS):
+def format_bootstrap_settings(ib_setting, request_files=False):
+    for key in VERSIONS.keys():
         try:
             ib_setting[key]
         except KeyError:
             ib_setting[key] = INCLUDE_BOOTSTRAP_SETTINGS[key]
-    format_keys = {'bootstrap_cdn_url': ib_setting['bootstrap_cdn_url'],
-                   'jquery_cdn_url': ib_setting['jquery_cdn_url'],
-                   'popover_cdn_url': ib_setting['popover_cdn_url'],
-                   'min': 'min.' if ib_setting['min'] else '',
-                   "bootstrap_version": ib_setting['bootstrap_version'],
-                   "jquery_version": ib_setting['jquery_version'],
-                   "popover_version": ib_setting['popover_version'],
-                   }
-    for key, val in ib_modify_dict.items():
+    format_keys = {
+        "bootstrap_version": ib_setting['bootstrap_version'],
+        "jquery_version": ib_setting['jquery_version'],
+        "popover_version": ib_setting['popover_version'],
+        'min': 'min.' if ib_setting['min'] else ''
+    }
+    for key, val in ib_setting.items():
         if isinstance(val, dict) and val.get('href'):
             val['href'] = val['href'].format(**format_keys)
-        else:
-            ib_modify_dict[key] = val.format(**format_keys)
-    return ib_modify_dict
+            if request_files:
+                print('URL-----', val['href'])
+                response = requests.get(val['href'])
+                if response and response.status_code == 200 and response.content:
+                    val['integrity'] = get_integrity(response.content)
+                else:
+                    print('NOURL-----', INCLUDE_BOOTSTRAP_SETTINGS[key]['href'])
+                    val['href'] = INCLUDE_BOOTSTRAP_SETTINGS[key]['href'].format(**VERSIONS)
+
+        elif isinstance(val, dict) and val.get('url'):
+            val['url'] = val['url'].format(**format_keys)
+            if request_files:
+                response = requests.get(val['url'])
+                if response and response.status_code == 200 and response.content:
+                    val['integrity'] = get_integrity(response.content)
+                else:
+                    val['url'] = INCLUDE_BOOTSTRAP_SETTINGS[key]['url'].format(**VERSIONS)
+        elif isinstance(val, str):
+            ib_setting[key] = val.format(**format_keys)
+    return ib_setting
 
 
-def get_bootstrap_setting(name, default=None):
+def get_bootstrap_setting(name, default=None, request_files=True):
     """Read a setting."""
     # Start with a copy of default settings
-    IB_SETTINGS = INCLUDE_BOOTSTRAP_SETTINGS.copy()
-    IB_CDNS = CDNS.copy()
-    IB_SETTINGS.update(**IB_CDNS)
+    SETTINGS = INCLUDE_BOOTSTRAP_SETTINGS.copy()
 
-    IB_DEFAULTS = format_bootstrap_settings(IB_SETTINGS, DEFAULTS.copy())
-    IB_SETTINGS.update(**IB_DEFAULTS)
     # Override with user settings from settings.py
-    IB_SETTINGS.update(getattr(settings, "INCLUDE_BOOTSTRAP_SETTINGS", {}))
+    # SETTINGS.update(getattr(settings, "INCLUDE_BOOTSTRAP_SETTINGS", {}))
+    SETTINGS.update({'bootstrap_version': '5.4.3'})
+    FORMATED = format_bootstrap_settings(SETTINGS, request_files)
+    SETTINGS.update(**FORMATED)
     # Update use_i18n
-    IB_SETTINGS["use_i18n"] = i18n_enabled()
-
-    return IB_SETTINGS.get(name, default)
+    # SETTINGS["use_i18n"] = i18n_enabled()
+    print(SETTINGS)
+    return SETTINGS.get(name, default)
 
 
 def jquery_url():
