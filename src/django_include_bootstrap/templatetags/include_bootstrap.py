@@ -292,7 +292,7 @@ def bootstrap_javascript(jquery=False, popover=False, bundle=False):
         javascript_tags.append(bootstrap_jquery(jquery=jquery))
 
     # Popper.js library
-    if popper_url and not bundle:
+    if popover and not bundle:
         javascript_tags.append(render_script_tag(bootstrap_popper_url()))
 
     # Bootstrap 4 JavaScript, Bundle include popover

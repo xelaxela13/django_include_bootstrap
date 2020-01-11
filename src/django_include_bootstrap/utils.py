@@ -4,6 +4,7 @@ from django.forms.utils import flatatt
 from django.utils.html import format_html
 import requests
 import subresource_integrity as integrity
+from copy import deepcopy
 
 try:
     from django.utils.encoding import force_text
@@ -22,31 +23,6 @@ INCLUDE_BOOTSTRAP_SETTINGS = {
     "include_jquery": False,
     "use_i18n": False,
     "min": True,
-    "css_url": {
-        "href": "https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.{min}css",
-        "integrity": "sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh",
-        "crossorigin": "anonymous",
-    },
-    "javascript_url": {
-        "url": "https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.{min}js",
-        "integrity": "sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6",
-        "crossorigin": "anonymous",
-    },
-    "jquery_url": {
-        "url": "https://code.jquery.com/jquery-{jquery_version}.{min}js",
-        "integrity": "sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT",
-        "crossorigin": "anonymous",
-    },
-    "jquery_slim_url": {
-        "url": "https://code.jquery.com//jquery-{jquery_version}.slim.{min}js",
-        "integrity": "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
-        "crossorigin": "anonymous",
-    },
-    "popper_url": {
-        "url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd/popper.min.js",
-        "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
-        "crossorigin": "anonymous",
-    },
 }
 
 
@@ -58,53 +34,53 @@ def get_integrity(data):
     return integrity.render(data)
 
 
-def format_bootstrap_settings(ib_setting, request_files=False):
-    for key in VERSIONS.keys():
-        try:
-            ib_setting[key]
-        except KeyError:
-            ib_setting[key] = INCLUDE_BOOTSTRAP_SETTINGS[key]
-    format_keys = {
-        "bootstrap_version": ib_setting['bootstrap_version'],
-        "jquery_version": ib_setting['jquery_version'],
-        "popover_version": ib_setting['popover_version'],
-        'min': 'min.' if ib_setting['min'] else ''
+def generate_urls_settings(setting: dict) -> dict:
+    minify = 'min.' if setting.get('min', INCLUDE_BOOTSTRAP_SETTINGS['min']) else ''
+    bootstrap_version = setting.get('bootstrap_version', VERSIONS['bootstrap_version'])
+    jquery_version = setting.get('jquery_version', VERSIONS['jquery_version'])
+    popover_version = setting.get('popover_version', VERSIONS['popover_version'])
+    urls_settings = {
+        "css_url": {
+            "href": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.{minify}css",
+            "integrity": "sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh",
+            "crossorigin": "anonymous",
+        },
+        "javascript_url": {
+            "url": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.{minify}js",
+            "integrity": "sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6",
+            "crossorigin": "anonymous",
+        },
+        "jquery_url": {
+            "url": f"https://code.jquery.com/jquery-{jquery_version}.{minify}js",
+            "integrity": "sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT",
+            "crossorigin": "anonymous",
+        },
+        "jquery_slim_url": {
+            "url": f"https://code.jquery.com//jquery-{jquery_version}.slim.{minify}js",
+            "integrity": "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
+            "crossorigin": "anonymous",
+        },
+        "popper_url": {
+            "url": f"https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd/popper.{minify}js",
+            "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
+            "crossorigin": "anonymous",
+        },
     }
-    for key, val in ib_setting.items():
-        if isinstance(val, dict) and val.get('href'):
-            val['href'] = val['href'].format(**format_keys)
-            if request_files:
-                print('URL-----', val['href'])
-                response = requests.get(val['href'])
-                if response and response.status_code == 200 and response.content:
-                    val['integrity'] = get_integrity(response.content)
-                else:
-                    print('NOURL-----', INCLUDE_BOOTSTRAP_SETTINGS[key]['href'])
-                    val['href'] = INCLUDE_BOOTSTRAP_SETTINGS[key]['href'].format(**VERSIONS)
-
-        elif isinstance(val, dict) and val.get('url'):
-            val['url'] = val['url'].format(**format_keys)
-            if request_files:
-                response = requests.get(val['url'])
-                if response and response.status_code == 200 and response.content:
-                    val['integrity'] = get_integrity(response.content)
-                else:
-                    val['url'] = INCLUDE_BOOTSTRAP_SETTINGS[key]['url'].format(**VERSIONS)
-        elif isinstance(val, str):
-            ib_setting[key] = val.format(**format_keys)
-    return ib_setting
+    return urls_settings
 
 
 def get_bootstrap_setting(name, default=None, request_files=True):
     """Read a setting."""
     # Start with a copy of default settings
-    SETTINGS = INCLUDE_BOOTSTRAP_SETTINGS.copy()
+    SETTINGS = deepcopy(INCLUDE_BOOTSTRAP_SETTINGS)
 
     # Override with user settings from settings.py
     # SETTINGS.update(getattr(settings, "INCLUDE_BOOTSTRAP_SETTINGS", {}))
     SETTINGS.update({'bootstrap_version': '5.4.3'})
-    FORMATED = format_bootstrap_settings(SETTINGS, request_files)
-    SETTINGS.update(**FORMATED)
+    # FORMATED = format_bootstrap_settings(SETTINGS, request_files)
+    # SETTINGS.update(**FORMATED)
+    URLS = generate_urls_settings(SETTINGS)
+    SETTINGS.update(**URLS)
     # Update use_i18n
     # SETTINGS["use_i18n"] = i18n_enabled()
     print(SETTINGS)
