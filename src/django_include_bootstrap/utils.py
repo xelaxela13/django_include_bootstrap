@@ -2,9 +2,8 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.forms.utils import flatatt
 from django.utils.html import format_html
-import requests
-import subresource_integrity as integrity
 from copy import deepcopy
+from .models import IncludeBootstrap
 
 try:
     from django.utils.encoding import force_text
@@ -22,68 +21,76 @@ INCLUDE_BOOTSTRAP_SETTINGS = {
     "javascript_in_head": False,
     "include_jquery": False,
     "use_i18n": False,
-    "min": True,
+    "use_db": False
 }
 
 
-def main():
-    jquery_url()
-
-
-def get_integrity(data):
-    return integrity.render(data)
-
-
 def generate_urls_settings(setting: dict) -> dict:
-    minify = 'min.' if setting.get('min', INCLUDE_BOOTSTRAP_SETTINGS['min']) else ''
     bootstrap_version = setting.get('bootstrap_version', VERSIONS['bootstrap_version'])
     jquery_version = setting.get('jquery_version', VERSIONS['jquery_version'])
     popover_version = setting.get('popover_version', VERSIONS['popover_version'])
     urls_settings = {
         "css_url": {
-            "href": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.{minify}css",
+            "href": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.min.css",
             "integrity": "sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh",
             "crossorigin": "anonymous",
         },
         "javascript_url": {
-            "url": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.{minify}js",
+            "url": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.min.js",
             "integrity": "sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6",
             "crossorigin": "anonymous",
         },
+        "javascript_bundle_url": {
+            "url": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.bundle.min.js",
+            "integrity": "sha384-6khuMg9gaYr5AxOqhkVIODVIvm9ynTT5J4V1cfthmT+emCG6yVmEZsRHdxlotUnm",
+            "crossorigin": "anonymous",
+        },
         "jquery_url": {
-            "url": f"https://code.jquery.com/jquery-{jquery_version}.{minify}js",
+            "url": f"https://code.jquery.com/jquery-{jquery_version}.min.js",
             "integrity": "sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT",
             "crossorigin": "anonymous",
         },
         "jquery_slim_url": {
-            "url": f"https://code.jquery.com//jquery-{jquery_version}.slim.{minify}js",
+            "url": f"https://code.jquery.com//jquery-{jquery_version}.slim.min.js",
             "integrity": "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
             "crossorigin": "anonymous",
         },
         "popper_url": {
-            "url": f"https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd/popper.{minify}js",
+            "url": f"https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd/popper.min.js",
             "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
             "crossorigin": "anonymous",
         },
     }
+    if setting.get('use_db', False):
+        css_url = IncludeBootstrap.get_active_instance(4)
+        javascript_url = IncludeBootstrap.get_active_instance(1)
+        jquery_url = IncludeBootstrap.get_active_instance(2)
+        popper_url = IncludeBootstrap.get_active_instance(3)
+        if css_url:
+            urls_settings['css_url'].update({'href': css_url.url, 'integrity': css_url.integrity})
+        if javascript_url:
+            urls_settings['javascript_url'].update({'url': javascript_url.url, 'integrity': javascript_url.integrity})
+        if jquery_url:
+            urls_settings['jquery_url'].update({'url': jquery_url.url, 'integrity': jquery_url.integrity})
+        if popper_url:
+            urls_settings['popper_url'].update({'url': popper_url.url, 'integrity': popper_url.integrity})
     return urls_settings
 
 
-def get_bootstrap_setting(name, default=None, request_files=True):
+def get_bootstrap_setting(name, default=None):
     """Read a setting."""
     # Start with a copy of default settings
     SETTINGS = deepcopy(INCLUDE_BOOTSTRAP_SETTINGS)
 
     # Override with user settings from settings.py
-    # SETTINGS.update(getattr(settings, "INCLUDE_BOOTSTRAP_SETTINGS", {}))
-    SETTINGS.update({'bootstrap_version': '5.4.3'})
-    # FORMATED = format_bootstrap_settings(SETTINGS, request_files)
-    # SETTINGS.update(**FORMATED)
+    SETTINGS.update(getattr(settings, "INCLUDE_BOOTSTRAP_SETTINGS", {}))
+
+    # Generate settings
     URLS = generate_urls_settings(SETTINGS)
     SETTINGS.update(**URLS)
+
     # Update use_i18n
-    # SETTINGS["use_i18n"] = i18n_enabled()
-    print(SETTINGS)
+    SETTINGS["use_i18n"] = i18n_enabled()
     return SETTINGS.get(name, default)
 
 
@@ -168,7 +175,3 @@ def render_tag(tag, attrs=None, content=None, close=True):
     if content or close:
         builder += "</{tag}>"
     return format_html(builder, tag=tag, attrs=mark_safe(flatatt(attrs)) if attrs else "", content=text_value(content))
-
-
-if __name__ == "__main__":
-    main()
