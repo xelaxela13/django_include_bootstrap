@@ -9,6 +9,6 @@ class IncludeBootstrap(models.Model):
     integrity = models.CharField(max_length=255)
     url = models.URLField(verbose_name='Library cdn url')
     url_pattern = models.CharField(max_length=512,
-                                   help_text='Should be string like - https://code.jquery.com/jquery-{version}.js'
+                                   help_text='Should be string like - https://code.jquery.com/jquery-{version}.js, '
                                              '{version} is a variable that will be replaced with values '
                                              'from "version" field')
