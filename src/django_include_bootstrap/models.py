@@ -5,7 +5,11 @@ import subresource_integrity as integrity
 
 
 class IncludeBootstrap(models.Model):
-    LIBRARY = (('1', 'Bootstrap Js'), ('2', 'Jquery'), ('3', 'Popover Js'), ('4', 'Bootstrap Css'))
+    LIBRARY = (('1', 'Bootstrap Js'),
+               ('2', 'Jquery'),
+               ('3', 'Popover Js'),
+               ('4', 'Bootstrap Css'),
+               ('5', 'Fontawesome Css'))
 
     library = models.CharField(max_length=32, choices=LIBRARY, blank=False, null=False)
     version = models.CharField(max_length=8, blank=False, null=False)

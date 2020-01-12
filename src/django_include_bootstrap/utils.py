@@ -14,6 +14,7 @@ VERSIONS = {
     "bootstrap_version": "4.4.1",
     "jquery_version": "3.3.1",
     "popover_version": "1.14.3",
+    "fontawesome_version": "4.7.0"
 }
 
 INCLUDE_BOOTSTRAP_SETTINGS = {
@@ -29,6 +30,7 @@ def generate_urls_settings(setting: dict) -> dict:
     bootstrap_version = setting.get('bootstrap_version', VERSIONS['bootstrap_version'])
     jquery_version = setting.get('jquery_version', VERSIONS['jquery_version'])
     popover_version = setting.get('popover_version', VERSIONS['popover_version'])
+    fontawesome_version = setting.get('fontawesome_version', VERSIONS['fontawesome_version'])
     urls_settings = {
         "css_url": {
             "href": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.min.css",
@@ -60,18 +62,32 @@ def generate_urls_settings(setting: dict) -> dict:
             "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
             "crossorigin": "anonymous",
         },
+        "fontawesome_url": {
+            "href": f"https://stackpath.bootstrapcdn.com/font-awesome/{fontawesome_version}/css/font-awesome.min.css",
+            "integrity": "sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN",
+            "crossorigin": "anonymous",
+        },
     }
     if setting.get('use_db', False):
         css_url = IncludeBootstrap.get_active_instance(4)
         javascript_url = IncludeBootstrap.get_active_instance(1)
         jquery_url = IncludeBootstrap.get_active_instance(2)
         popper_url = IncludeBootstrap.get_active_instance(3)
+        fontawesome_url = IncludeBootstrap.get_active_instance(5)
         if css_url:
             urls_settings['css_url'].update({'href': css_url.url, 'integrity': css_url.integrity})
+        if fontawesome_url:
+            urls_settings['fontawesome_url'].update({'href': fontawesome_url.url,
+                                                     'integrity': fontawesome_url.integrity})
         if javascript_url:
             urls_settings['javascript_url'].update({'url': javascript_url.url, 'integrity': javascript_url.integrity})
+        if javascript_url and '.bundle' in javascript_url.url:
+            urls_settings['javascript_bundle_url'].update({'url': javascript_url.url,
+                                                           'integrity': javascript_url.integrity})
         if jquery_url:
             urls_settings['jquery_url'].update({'url': jquery_url.url, 'integrity': jquery_url.integrity})
+        if jquery_url and '.slim' in jquery_url.url:
+            urls_settings['jquery_slim_url'].update({'url': jquery_url.url, 'integrity': jquery_url.integrity})
         if popper_url:
             urls_settings['popper_url'].update({'url': popper_url.url, 'integrity': popper_url.integrity})
     return urls_settings
@@ -92,6 +108,11 @@ def get_bootstrap_setting(name, default=None):
     # Update use_i18n
     SETTINGS["use_i18n"] = i18n_enabled()
     return SETTINGS.get(name, default)
+
+
+def fontawesome_css_url():
+    """Return the full url to Fontawesome library file to use."""
+    return get_bootstrap_setting("fontawesome_url")
 
 
 def jquery_url():

@@ -5,6 +5,7 @@ from django.db import migrations
 bootstrap_version = "4.4.1"
 jquery_version = "3.3.1"
 popover_version = "1.14.3"
+fontawesome_version = "4.7.0"
 urls_settings = [
     {
         "library": 4,
@@ -52,6 +53,14 @@ urls_settings = [
         "url": f"https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd/popper.min.js",
         "url_pattern": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{version}/umd/popper.min.js",
         "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
+        "active": True
+    },
+{
+        "library": 5,
+        "version": fontawesome_version,
+        "url": f"https://stackpath.bootstrapcdn.com/font-awesome/{fontawesome_version}/css/font-awesome.min.css",
+        "url_pattern": "https://stackpath.bootstrapcdn.com/font-awesome/{version}/css/font-awesome.min.css",
+        "integrity": "sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN",
         "active": True
     }
 ]

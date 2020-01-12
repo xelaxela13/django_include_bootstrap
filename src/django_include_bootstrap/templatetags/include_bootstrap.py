@@ -1,5 +1,3 @@
-from urllib.parse import parse_qs, urlparse, urlunparse
-
 from django import template
 
 from django.utils.safestring import mark_safe
@@ -12,6 +10,7 @@ from ..utils import (
     jquery_slim_url,
     jquery_url,
     popper_url,
+    fontawesome_css_url,
     render_link_tag,
     render_script_tag,
     render_tag,
@@ -179,7 +178,6 @@ def bootstrap_css_url():
     return css_url()
 
 
-
 @register.simple_tag
 def bootstrap_css():
     """
@@ -204,6 +202,57 @@ def bootstrap_css():
     rendered_urls = []
     if bootstrap_css_url():
         rendered_urls.append(render_link_tag(bootstrap_css_url()))
+    return mark_safe("".join([url for url in rendered_urls]))
+
+
+@register.simple_tag
+def fontawesome_url():
+    """
+    Return the full url to the Fontawesome CSS library.
+
+    Default value: ``None``
+
+    This value is configurable, see Settings section
+
+    **Tag name**::
+
+        fontawesome_url
+
+    **Usage**::
+
+        {% fontawesome_url %}
+
+    **Example**::
+
+        {% fontawesome_url %}
+    """
+    return fontawesome_css_url()
+
+
+@register.simple_tag
+def fontawesome_css():
+    """
+        Return HTML for Fontawesome CSS. Adjust url in settings. If no url is returned, we don't want this statement to return any HTML. This is intended behavior.
+
+        Default value: ``None``
+
+        This value is configurable, see Settings section
+
+        **Tag name**::
+
+            fontawesome_css
+
+        **Usage**::
+
+            {% fontawesome_css %}
+
+        **Example**::
+
+            {% fontawesome_css %}
+        """
+    rendered_urls = []
+    if fontawesome_url():
+        rendered_urls.append(render_link_tag(fontawesome_url()))
     return mark_safe("".join([url for url in rendered_urls]))
 
 
@@ -295,8 +344,11 @@ def bootstrap_javascript(jquery=False, popover=False, bundle=False):
     if popover and not bundle:
         javascript_tags.append(render_script_tag(bootstrap_popper_url()))
 
-    # Bootstrap 4 JavaScript, Bundle include popover
+    # Bootstrap 4 JavaScript, Bundle already include popover
     bootstrap_js_url = bootstrap_javascript_url() if not bundle else bootstrap_javascript_bundle_url()
+    if '.bundle' in bootstrap_js_url['url'] and popover and not bundle:
+        javascript_tags.pop()
+
     if bootstrap_js_url:
         javascript_tags.append(render_script_tag(bootstrap_js_url))
 
