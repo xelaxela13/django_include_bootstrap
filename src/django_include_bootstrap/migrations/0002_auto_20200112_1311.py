@@ -5,47 +5,69 @@ from django.db import migrations
 bootstrap_version = "4.4.1"
 jquery_version = "3.3.1"
 popover_version = "1.14.3"
-urls_settings = {
-    "css_url": {
-        "library": 1,
-        "href": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.min.css",
+urls_settings = [
+    {
+        "library": 4,
+        "version": bootstrap_version,
+        "url": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/css/bootstrap.min.css",
+        "url_pattern": "https://stackpath.bootstrapcdn.com/bootstrap/{version}/css/bootstrap.min.css",
         "integrity": "sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh",
-        "crossorigin": "anonymous",
+        "active": True
     },
-    "javascript_url": {
+    {
+        "library": 1,
+        "version": bootstrap_version,
         "url": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.min.js",
+        "url_pattern": "https://stackpath.bootstrapcdn.com/bootstrap/{version}/js/bootstrap.min.js",
         "integrity": "sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6",
-        "crossorigin": "anonymous",
+        "active": True
     },
-    "javascript_bundle_url": {
+    {
+        "library": 1,
+        "version": bootstrap_version,
         "url": f"https://stackpath.bootstrapcdn.com/bootstrap/{bootstrap_version}/js/bootstrap.bundle.min.js",
+        "url_pattern": "https://stackpath.bootstrapcdn.com/bootstrap/{version}/js/bootstrap.bundle.min.js",
         "integrity": "sha384-6khuMg9gaYr5AxOqhkVIODVIvm9ynTT5J4V1cfthmT+emCG6yVmEZsRHdxlotUnm",
-        "crossorigin": "anonymous",
+        "active": False
     },
-    "jquery_url": {
+    {
+        "library": 2,
+        "version": jquery_version,
         "url": f"https://code.jquery.com/jquery-{jquery_version}.min.js",
+        "url_pattern": "https://code.jquery.com/jquery-{version}.min.js",
         "integrity": "sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT",
-        "crossorigin": "anonymous",
+        "active": True
     },
-    "jquery_slim_url": {
+    {
+        "library": 2,
+        "version": jquery_version,
         "url": f"https://code.jquery.com//jquery-{jquery_version}.slim.min.js",
+        "url_pattern": "https://code.jquery.com//jquery-{version}.slim.min.js",
         "integrity": "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
-        "crossorigin": "anonymous",
+        "active": False
     },
-    "popper_url": {
+    {
+        "library": 3,
+        "version": popover_version,
         "url": f"https://cdnjs.cloudflare.com/ajax/libs/popper.js/{popover_version}/umd/popper.min.js",
+        "url_pattern": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/{version}/umd/popper.min.js",
         "integrity": "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
-        "crossorigin": "anonymous",
+        "active": True
     }
-}
+]
 
 
 def forwards(apps, schema_editor):
     IncludeBootstrap = apps.get_model('django_include_bootstrap', 'IncludeBootstrap')
+    entity = []
+    for item in urls_settings:
+        entity.append(IncludeBootstrap(**item))
+    IncludeBootstrap.objects.bulk_create(entity)
 
 
 def backwards(apps, schema_editor):
     IncludeBootstrap = apps.get_model('django_include_bootstrap', 'IncludeBootstrap')
+    IncludeBootstrap.objects.all().delete()
 
 
 class Migration(migrations.Migration):
