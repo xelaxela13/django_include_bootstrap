@@ -10,8 +10,8 @@ class IncludeBootstrapAdmin(admin.ModelAdmin):
     list_display = ('library', 'version', 'active')
 
     def save_model(self, request, obj, form, change):
-        if obj.__class__.objects.filter(library=obj.library, active=obj.active).exists():
-            obj.active = False
+        if obj.active:
+            obj.__class__.objects.filter(library=obj.library, active=obj.active).update(active=False)
             messages.add_message(request, messages.WARNING,
-                                 f'Please note! Entity was inactive, because active library already exists.')
+                                 f'Please note! Entity was activate and another {obj.library} inactivated')
         super().save_model(request, obj, form, change)
