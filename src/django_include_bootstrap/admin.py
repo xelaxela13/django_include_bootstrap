@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib import messages
 from .models import IncludeBootstrap
+from django.conf import settings
 
 
-@admin.register(IncludeBootstrap)
 class IncludeBootstrapAdmin(admin.ModelAdmin):
     fields = ('library', 'version', 'url_pattern', 'integrity', 'url', 'active')
     readonly_fields = ('integrity', 'url')
@@ -15,3 +15,7 @@ class IncludeBootstrapAdmin(admin.ModelAdmin):
             messages.add_message(request, messages.WARNING,
                                  f'Please note! The object was activated and another library was deactivated.')
         super().save_model(request, obj, form, change)
+
+
+if getattr(settings, 'INCLUDE_BOOTSTRAP_SETTINGS', {}) and settings.INCLUDE_BOOTSTRAP_SETTINGS.get('use_db'):
+    admin.site.register(IncludeBootstrap, IncludeBootstrapAdmin)
