@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build wheel and tar.gz to dist folder
-        run: >_
+        run:
           python -m pip install --upgrade pip setuptools wheel
           python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
       - name: Publish distribution to TestPyPI
